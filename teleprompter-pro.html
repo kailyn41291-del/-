@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Teleprompter Pro - 提詞管理系統</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pptxgenjs/3.12.0/pptxgen.bundle.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;display:inline-block;line-height:1;text-transform:none;letter-spacing:normal;word-wrap:normal;white-space:nowrap;direction:ltr}
+body{background:#000;color:#e5e2e1;font-family:'Inter',sans-serif;overflow:hidden;height:100vh}
+.app{display:grid;grid-template-columns:260px 1fr;height:100vh;position:relative}
+.sidebar{background:#1c1b1b;border-right:1px solid #444748;display:flex;flex-direction:column;height:100vh;overflow:hidden}
+.sidebar-head{padding:16px;border-bottom:1px solid rgba(68,71,72,0.3)}
+.sidebar-user{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.avatar{width:42px;height:42px;border-radius:6px;border:1px solid #444748;background:#353535;display:flex;align-items:center;justify-content:center;font-size:18px;color:#adc6ff}
+.avatar-info span:first-child{display:block;font-size:14px;font-weight:700;color:#c9c6c5;letter-spacing:-.01em}
+.avatar-info span:last-child{display:block;font-size:12px;color:#8e9192}
+.live-badge{display:flex;align-items:center;gap:6px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live-text{font-size:11px;color:#8e9192;letter-spacing:.05em;text-transform:uppercase}
+.sidebar-nav{flex:1;overflow-y:auto;padding:8px 0}
+.sidebar-nav::-webkit-scrollbar{width:4px}
+.sidebar-nav::-webkit-scrollbar-thumb{background:#262626;border-radius:10px}
+.nav-section-btn{display:flex;align-items:center;justify-content:space-between;width:100%;background:#353535;color:#adc6ff;border-left:2px solid #adc6ff;padding:8px 16px;cursor:pointer;border-top:none;border-right:none;border-bottom:none;font-family:'Inter',sans-serif;font-size:15px}
+.nav-section-btn:hover{background:#2a2a2a}
+.nav-section-btn .mi{color:#adc6ff}
+.artist-section{padding:6px 16px}
+.artist-label{font-size:11px;color:#8e9192;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between}
+.artist-label button{background:none;border:none;cursor:pointer;color:#8e9192;font-size:16px;padding:0 2px;line-height:1}
+.artist-label button:hover{color:#c9c6c5}
+.song-link{display:flex;align-items:center;justify-content:space-between;padding:5px 0 5px 16px;font-size:14px;color:#8e9192;cursor:pointer;border-radius:4px}
+.song-link:hover{color:#c9c6c5;background:rgba(255,255,255,.03)}
+.song-link .actions{opacity:0;display:flex;gap:4px}
+.song-link:hover .actions{opacity:1}
+.song-link .mi{font-size:14px;cursor:pointer}
+.song-link .mi:hover{color:#007AFF}
+.nav-link{display:flex;align-items:center;gap:8px;color:#8e9192;padding:8px 16px;cursor:pointer;font-size:15px;transition:background .15s}
+.nav-link:hover{background:#2a2a2a;color:#c9c6c5}
+.sidebar-bottom{padding:10px 12px;border-top:1px solid rgba(68,71,72,.3)}
+.main{display:flex;flex-direction:column;height:100vh;background:#000;overflow:hidden}
+.topbar{height:56px;border-bottom:1px solid rgba(68,71,72,.3);display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(0,0,0,.8);backdrop-filter:blur(12px);flex-shrink:0}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:18px;font-weight:800;color:#c9c6c5;letter-spacing:-.03em}
+.divider-v{width:1px;height:20px;background:#444748}
+.search-wrap{position:relative}
+.search-wrap .mi{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#8e9192;font-size:18px}
+.search-wrap input{background:#050505;border:1px solid rgba(68,71,72,.5);border-radius:8px;padding:6px 12px 6px 34px;width:220px;color:#e5e2e1;font-family:'Inter',sans-serif;font-size:14px}
+.search-wrap input:focus{outline:none;border-color:#007AFF}
+.search-wrap input::placeholder{color:rgba(142,145,146,.5)}
+.topbar-right{display:flex;gap:8px}
+.btn-filter{display:flex;align-items:center;gap:4px;padding:6px 14px;background:#2a2a2a;border:none;border-radius:8px;color:#e5e2e1;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif}
+.btn-filter:hover{background:#353535}
+.btn-new{display:flex;align-items:center;gap:4px;padding:6px 14px;background:#007AFF;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;letter-spacing:.05em}
+.btn-new:hover{filter:brightness(1.1)}
+.content{flex:1;overflow-y:auto;padding:24px 32px 80px}
+.content::-webkit-scrollbar{width:4px}
+.content::-webkit-scrollbar-thumb{background:#262626;border-radius:10px}
+.content-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px}
+.content-head h1{font-size:28px;font-weight:700;color:#e5e2e1;letter-spacing:-.02em;line-height:1.1}
+.content-head p{font-size:14px;color:#8e9192;margin-top:4px}
+.sel-bar{background:#20201f;border-radius:8px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;font-size:13px;color:#8e9192}
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.card{background:#0d0d0d;border:1px solid #262626;border-radius:12px;padding:16px;cursor:pointer;transition:border-color .15s;position:relative;overflow:hidden}
+.card:hover{border-color:#404040}
+.card.selected{border:1.5px solid #007AFF}
+.card-stripe{position:absolute;top:0;left:0;width:3px;height:100%}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.badge{padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase}
+.badge-live{background:rgba(34,197,94,.1);color:#22c55e}
+.badge-sel{background:rgba(0,122,255,.15);color:#007AFF}
+.card-actions-hover{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.card:hover .card-actions-hover{opacity:1}
+.card-actions-hover .mi{color:#8e9192;cursor:pointer;font-size:18px}
+.card-actions-hover .mi:hover{color:#c9c6c5}
+.card h3{font-size:18px;font-weight:600;color:#c9c6c5;margin-bottom:4px;letter-spacing:-.01em}
+.card p{font-size:14px;color:#8e9192;margin-bottom:16px}
+.card-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(68,71,72,.2);padding-top:12px}
+.card-time{display:flex;align-items:center;gap:4px;color:#8e9192;font-size:12px;overflow:hidden;max-width:60%}
+.card-time span:last-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card-artist{font-size:12px;color:#adc6ff}
+.card-add{border:2px dashed #262626;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;cursor:pointer;min-height:160px;transition:all .2s}
+.card-add:hover{border-color:rgba(0,122,255,.5);background:rgba(0,122,255,.05)}
+.card-add .mi{font-size:40px;color:#8e9192}
+.card-add:hover .mi{color:#007AFF}
+.card-add span{font-size:14px;color:#8e9192;margin-top:8px}
+.card-add:hover span{color:#c9c6c5}
+.footer{position:fixed;bottom:0;left:260px;right:0;height:60px;background:#20201f;border-top:1px solid rgba(68,71,72,.3);padding:0 32px;display:flex;align-items:center;justify-content:space-between;z-index:50}
+.footer-left{display:flex;align-items:center;gap:12px;font-size:12px;color:#8e9192;text-transform:uppercase;letter-spacing:.05em}
+.footer-divider{width:1px;height:16px;background:#444748}
+.btn-del{display:flex;align-items:center;gap:4px;background:none;border:none;color:#8e9192;cursor:pointer;font-size:12px;font-family:'Inter',sans-serif;opacity:.4}
+.btn-del.active{opacity:1}
+.btn-del.active:hover{color:#f87171}
+.footer-right{display:flex;align-items:center;gap:20px}
+.setlist-info{text-align:right}
+.setlist-info strong{display:block;font-size:13px;color:#c9c6c5;font-weight:700}
+.setlist-info span{font-size:10px;color:#8e9192}
+.btn-share{width:36px;height:36px;border-radius:50%;background:#2a2a2a;border:1px solid rgba(68,71,72,.2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.btn-share:hover{background:#353535}
+.btn-share .mi{color:#adc6ff;font-size:18px}
+.btn-export{display:flex;align-items:center;gap:8px;padding:8px 20px;background:#007AFF;border:none;border-radius:8px;color:#fff;cursor:pointer;font-size:12px;font-weight:700;font-family:'Inter',sans-serif;letter-spacing:.05em;text-transform:uppercase}
+.btn-export:hover{filter:brightness(1.1)}
+.modal-wrap{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200}
+.modal{background:#1c1b1b;border:1px solid #444748;border-radius:12px;padding:20px;width:460px;max-width:90%}
+.modal h3{font-size:16px;font-weight:600;color:#e5e2e1;margin-bottom:14px}
+.fg{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.fg label{font-size:12px;color:#8e9192;text-transform:uppercase;letter-spacing:.04em}
+.fg input,.fg textarea{background:#0d0d0d;border:1px solid #444748;border-radius:8px;padding:8px 12px;color:#e5e2e1;font-family:'Inter',sans-serif;font-size:14px;width:100%}
+.fg textarea{resize:vertical;min-height:180px;line-height:1.6}
+.fg input:focus,.fg textarea:focus{outline:none;border-color:#007AFF}
+.mactions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.mbtn{padding:7px 16px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid #444748;background:transparent;color:#e5e2e1;font-family:'Inter',sans-serif}
+.mbtn:hover{background:#353535}
+.mbtn-primary{background:#007AFF;border-color:#007AFF;color:#fff}
+.mbtn-primary:hover{filter:brightness(1.1)}
+.toast-el{position:fixed;bottom:72px;right:24px;background:#1D9E75;color:#fff;padding:8px 16px;border-radius:8px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;font-family:'Inter',sans-serif}
+.toast-el.show{opacity:1}
+.empty-state{text-align:center;padding:80px 20px;color:#8e9192}
+.empty-state .mi{font-size:48px;display:block;margin-bottom:12px;color:#444748}
+.empty-state p{font-size:14px}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-user">
+      <div class="avatar"><span class="material-symbols-outlined">mic</span></div>
+      <div class="avatar-info">
+        <span>提詞管理系統</span>
+        <span>Teleprompter Pro</span>
+      </div>
+    </div>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      <span class="live-text">系統就緒</span>
+    </div>
+  </div>
+  <div class="sidebar-nav" id="sidebarNav"></div>
+  <div class="sidebar-bottom">
+    <button class="btn-new" style="width:100%;justify-content:center;border-radius:8px;padding:8px 0" onclick="openAddArtist()">
+      <span class="material-symbols-outlined" style="font-size:16px">add_circle</span> 新增藝人
+    </button>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <span class="topbar-title">Teleprompter Pro</span>
+      <div class="divider-v"></div>
+      <div class="search-wrap">
+        <span class="material-symbols-outlined mi">search</span>
+        <input type="text" id="searchInput" placeholder="搜尋藝人或歌曲..." oninput="handleSearch()">
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-new" onclick="openAddSong()">
+        <span class="material-symbols-outlined" style="font-size:16px">add_circle</span> 新增歌曲
+      </button>
+    </div>
+  </div>
+  <div class="content" id="mainContent"></div>
+  <div class="footer">
+    <div class="footer-left">
+      <span id="selCount">已選：0</span>
+      <div class="footer-divider"></div>
+      <button class="btn-del" id="delBtn" onclick="deleteSelected()">
+        <span class="material-symbols-outlined" style="font-size:16px">delete</span> 刪除
+      </button>
+    </div>
+    <div class="footer-right">
+      <div class="setlist-info">
+        <strong id="footerArtist">請選擇藝人</strong>
+        <span id="footerSub">—</span>
+      </div>
+      <button class="btn-share"><span class="material-symbols-outlined mi">ios_share</span></button>
+      <button class="btn-export" onclick="exportSelected()">
+        <span class="material-symbols-outlined" style="font-size:16px">present_to_all</span> 匯出 PPT
+      </button>
+    </div>
+  </div>
+</main>
+</div>
+
+<div id="modalContainer"></div>
+<div id="toastEl" class="toast-el"></div>
+
+<script>
+let db = JSON.parse(localStorage.getItem('tpro_db') || '{"artists":[]}');
+let curArtist = null;
+let sel = new Set();
+const MAX = 20;
+
+function save(){localStorage.setItem('tpro_db', JSON.stringify(db))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2)}
+
+function toast(msg){
+  const t = document.getElementById('toastEl');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function splitLine(text, max=MAX){
+  if(!text || !text.trim()) return [];
+  const lines = text.trim().split('\n').map(l => l.trim()).filter(Boolean);
+  const res = [];
+  for(const line of lines){
+    if(line.length <= max){ res.push(line); continue; }
+    let rem = line;
+    while(rem.length > max){
+      let at = max;
+      for(let i = max-1; i >= Math.floor(max/2); i--){
+        if(' \u3000，。！？、；：'.includes(rem[i])){ at = i+1; break; }
+      }
+      res.push(rem.slice(0, at).trim());
+      rem = rem.slice(at).trim();
+    }
+    if(rem) res.push(rem.trim());
+  }
+  return res;
+}
+
+function renderSidebar(){
+  const nav = document.getElementById('sidebarNav');
+  let html = `<button class="nav-section-btn">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="material-symbols-outlined mi" style="font-size:18px">person</span> 藝人
+    </div>
+    <span class="material-symbols-outlined mi" style="font-size:18px">expand_more</span>
+  </button>
+  <div style="background:rgba(0,0,0,.2);padding:6px 0">`;
+
+  if(!db.artists.length){
+    html += `<p style="padding:8px 16px;font-size:12px;color:#8e9192">尚無藝人，請點下方「新增藝人」</p>`;
+  } else {
+    for(const a of db.artists){
+      html += `<div class="artist-section">
+        <div class="artist-label">
+          <span style="cursor:pointer;color:${a.id===curArtist?'#c9c6c5':'#8e9192'};font-weight:${a.id===curArtist?'600':'400'}" onclick="selectArtist('${a.id}')">${a.name}</span>
+          <div style="display:flex;gap:2px">
+            <button onclick="openAddSongForArtist('${a.id}')" title="新增歌曲"><span class="material-symbols-outlined" style="font-size:14px">add</span></button>
+            <button onclick="delArtist('${a.id}')" title="刪除藝人"><span class="material-symbols-outlined" style="font-size:14px">delete</span></button>
+          </div>
+        </div>`;
+      for(const s of a.songs){
+        html += `<div class="song-link" onclick="quickExport('${a.id}','${s.id}')">
+          <span>${s.title}</span>
+          <div class="actions">
+            <span class="material-symbols-outlined mi" onclick="event.stopPropagation();editSong('${a.id}','${s.id}')" title="編輯">edit</span>
+            <span class="material-symbols-outlined mi" onclick="event.stopPropagation();quickExport('${a.id}','${s.id}')" title="匯出PPT">download</span>
+          </div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+  }
+  html += `</div>
+  <a class="nav-link"><span class="material-symbols-outlined" style="font-size:18px">history</span> 最近使用</a>
+  <a class="nav-link"><span class="material-symbols-outlined" style="font-size:18px">star</span> 我的最愛</a>`;
+  nav.innerHTML = html;
+}
+
+function selectArtist(id){
+  curArtist = id; sel.clear();
+  renderSidebar(); renderMain();
+}
+
+function renderMain(filter=''){
+  const artist = db.artists.find(a => a.id === curArtist);
+  const mc = document.getElementById('mainContent');
+  document.getElementById('selCount').textContent = `已選：${sel.size}`;
+  const delBtn = document.getElementById('delBtn');
+  delBtn.className = 'btn-del' + (sel.size ? ' active' : '');
+  if(artist){
+    document.getElementById('footerArtist').textContent = artist.name;
+    document.getElementById('footerSub').textContent = `${artist.songs.length} 首歌曲`;
+  }
+  if(!artist){
+    mc.innerHTML = `<div class="empty-state">
+      <span class="material-symbols-outlined mi">library_music</span>
+      <p>從左側選擇藝人，或點「新增藝人」開始</p>
+    </div>`;
+    return;
+  }
+  const songs = filter ? artist.songs.filter(s => s.title.includes(filter) || s.lyrics.includes(filter)) : artist.songs;
+  const selBar = sel.size ? `<div class="sel-bar">
+    <span>已選 <strong style="color:#c9c6c5">${sel.size}</strong> 首歌曲</span>
+    <button class="mbtn" style="padding:4px 10px;font-size:12px" onclick="sel.clear();renderMain()">取消選擇</button>
+  </div>` : '';
+  mc.innerHTML = `
+    <div class="content-head">
+      <div>
+        <h1>${artist.name} 的歌單</h1>
+        <p>共 ${artist.songs.length} 首歌曲・點擊卡片勾選，右下角匯出 PPT</p>
+      </div>
+    </div>
+    ${selBar}
+    <div class="cards-grid">
+      ${songs.map(s => `
+        <div class="card${sel.has(s.id) ? ' selected' : ''}" onclick="toggleSel('${s.id}')">
+          <div class="card-stripe" style="background:${sel.has(s.id) ? '#007AFF' : '#22c55e'}"></div>
+          <div class="card-top">
+            <span class="badge ${sel.has(s.id) ? 'badge-sel' : 'badge-live'}">${sel.has(s.id) ? '✓ 已選' : '歌曲'}</span>
+            <div class="card-actions-hover">
+              <span class="material-symbols-outlined mi" onclick="event.stopPropagation();editSong('${artist.id}','${s.id}')" title="編輯">edit</span>
+              <span class="material-symbols-outlined mi" onclick="event.stopPropagation();quickExport('${artist.id}','${s.id}')" title="匯出PPT">download</span>
+              <span class="material-symbols-outlined mi" onclick="event.stopPropagation();delSong('${artist.id}','${s.id}')" title="刪除" style="color:#8e9192" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='#8e9192'">delete</span>
+            </div>
+          </div>
+          <h3>${s.title}</h3>
+          <p>${s.lyrics.split('\n').filter(l => l.trim()).length} 行歌詞・${splitLine(s.lyrics).length} 張投影片</p>
+          <div class="card-foot">
+            <div class="card-time">
+              <span class="material-symbols-outlined" style="font-size:16px">music_note</span>
+              <span>${s.lyrics.trim().split('\n')[0] || ''}...</span>
+            </div>
+            <span class="card-artist">${artist.name}</span>
+          </div>
+        </div>`).join('')}
+      <div class="card-add" onclick="openAddSong()">
+        <span class="material-symbols-outlined mi">add_circle</span>
+        <span>新增歌曲</span>
+      </div>
+    </div>`;
+}
+
+function toggleSel(id){ sel.has(id) ? sel.delete(id) : sel.add(id); renderMain(); }
+
+function handleSearch(){
+  const q = document.getElementById('searchInput').value.trim();
+  if(!curArtist && q){
+    for(const a of db.artists){
+      if(a.songs.some(s => s.title.includes(q) || s.lyrics.includes(q))){ selectArtist(a.id); break; }
+    }
+  }
+  renderMain(q);
+}
+
+function openAddArtist(){
+  showModal(`<h3>新增藝人</h3>
+    <div class="fg"><label>藝人名稱</label><input type="text" id="aname" placeholder="例：品冠"></div>
+    <div class="mactions"><button class="mbtn" onclick="closeModal()">取消</button><button class="mbtn mbtn-primary" onclick="addArtist()">新增</button></div>`);
+  setTimeout(() => document.getElementById('aname')?.focus(), 30);
+}
+function addArtist(){
+  const n = document.getElementById('aname').value.trim(); if(!n) return;
+  const a = {id:uid(), name:n, songs:[]};
+  db.artists.push(a); save(); closeModal();
+  selectArtist(a.id); toast(`已新增藝人「${n}」`);
+}
+function delArtist(id){
+  const a = db.artists.find(x => x.id === id);
+  if(!confirm(`確定刪除藝人「${a.name}」及所有歌曲？`)) return;
+  db.artists = db.artists.filter(x => x.id !== id);
+  if(curArtist === id){ curArtist = null; }
+  save(); renderSidebar(); renderMain(); toast(`已刪除「${a.name}」`);
+}
+
+function openAddSong(){ if(!curArtist){alert('請先選擇藝人');return;} openAddSongForArtist(curArtist); }
+function openAddSongForArtist(aid){
+  showModal(`<h3>新增歌曲</h3>
+    <div class="fg"><label>歌曲名稱</label><input type="text" id="stitle" placeholder="例：哈囉" data-aid="${aid}"></div>
+    <div class="fg"><label>歌詞（直接貼上）</label><textarea id="slyrics" placeholder="每行一句，空行為段落分隔..."></textarea></div>
+    <div class="mactions"><button class="mbtn" onclick="closeModal()">取消</button><button class="mbtn mbtn-primary" onclick="addSong()">儲存</button></div>`);
+  setTimeout(() => document.getElementById('stitle')?.focus(), 30);
+}
+function addSong(){
+  const el = document.getElementById('stitle');
+  const aid = el.dataset.aid;
+  const t = el.value.trim(); const l = document.getElementById('slyrics').value.trim();
+  if(!t || !l) return;
+  const a = db.artists.find(x => x.id === aid);
+  a.songs.push({id:uid(), title:t, lyrics:l});
+  save(); closeModal(); renderSidebar(); renderMain(); toast(`已新增「${t}」`);
+}
+function editSong(aid, sid){
+  const a = db.artists.find(x => x.id === aid);
+  const s = a.songs.find(x => x.id === sid);
+  showModal(`<h3>編輯歌曲</h3>
+    <div class="fg"><label>歌曲名稱</label><input type="text" id="stitle" value="${s.title.replace(/"/g,'&quot;')}" data-aid="${aid}" data-sid="${sid}"></div>
+    <div class="fg"><label>歌詞</label><textarea id="slyrics">${s.lyrics}</textarea></div>
+    <div class="mactions"><button class="mbtn" onclick="closeModal()">取消</button><button class="mbtn mbtn-primary" onclick="saveEdit()">儲存</button></div>`);
+  setTimeout(() => document.getElementById('stitle')?.focus(), 30);
+}
+function saveEdit(){
+  const el = document.getElementById('stitle');
+  const {aid, sid} = el.dataset;
+  const t = el.value.trim(); const l = document.getElementById('slyrics').value.trim();
+  if(!t || !l) return;
+  const a = db.artists.find(x => x.id === aid);
+  const s = a.songs.find(x => x.id === sid);
+  s.title = t; s.lyrics = l;
+  save(); closeModal(); renderSidebar(); renderMain(); toast(`已儲存「${t}」`);
+}
+function delSong(aid, sid){
+  const a = db.artists.find(x => x.id === aid);
+  const s = a.songs.find(x => x.id === sid);
+  if(!confirm(`確定刪除「${s.title}」？`)) return;
+  a.songs = a.songs.filter(x => x.id !== sid); sel.delete(sid);
+  save(); renderSidebar(); renderMain(); toast(`已刪除「${s.title}」`);
+}
+function deleteSelected(){
+  if(!sel.size) return;
+  if(!confirm(`確定刪除已選 ${sel.size} 首歌曲？`)) return;
+  const a = db.artists.find(x => x.id === curArtist);
+  a.songs = a.songs.filter(s => !sel.has(s.id));
+  sel.clear(); save(); renderSidebar(); renderMain(); toast('已刪除選取歌曲');
+}
+
+function buildPPT(songs, filename){
+  const pres = new PptxGenJS(); pres.layout = 'LAYOUT_16x9';
+  for(const song of songs){
+    const ts = pres.addSlide(); ts.background = {color:'000000'};
+    ts.addText(song.title, {x:0,y:0,w:10,h:5.625,fontSize:36,fontFace:'微軟正黑體',color:'FFFFFF',align:'center',valign:'middle',bold:true,wrap:true});
+    const lines = splitLine(song.lyrics);
+    for(const line of lines){
+      if(!line.trim()) continue;
+      const s = pres.addSlide(); s.background = {color:'000000'};
+      s.addText(line.trim(), {x:0,y:0,w:10,h:5.625,fontSize:36,fontFace:'微軟正黑體',color:'FFFFFF',align:'center',valign:'middle',bold:false,wrap:false});
+    }
+  }
+  pres.writeFile({fileName: filename+'.pptx'}).then(() => toast('✓ PPT 匯出成功！'));
+}
+function quickExport(aid, sid){
+  const a = db.artists.find(x => x.id === aid);
+  const s = a.songs.find(x => x.id === sid);
+  buildPPT([s], `${a.name}_${s.title}`);
+}
+function exportSelected(){
+  const a = db.artists.find(x => x.id === curArtist);
+  if(!a){ alert('請先選擇藝人'); return; }
+  const songs = sel.size ? a.songs.filter(s => sel.has(s.id)) : a.songs;
+  if(!songs.length){ alert('沒有歌曲可匯出'); return; }
+  buildPPT(songs, sel.size ? `${a.name}_已選歌曲` : `${a.name}_完整歌單`);
+}
+
+function showModal(html){
+  const mc = document.getElementById('modalContainer');
+  mc.innerHTML = `<div class="modal-wrap" id="mwrap"><div class="modal">${html}</div></div>`;
+  document.getElementById('mwrap').addEventListener('click', e => { if(e.target.id==='mwrap') closeModal(); });
+}
+function closeModal(){ document.getElementById('modalContainer').innerHTML = ''; }
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeModal(); });
+
+renderSidebar();
+renderMain();
+</script>
+</body>
+</html>
